@@ -27,9 +27,36 @@ def get_scores(dice, scorecard):
 def roll_dice(num_dice):
     return [randint(1, 6) for _ in range(num_dice)]
 
-def decide_dice(dice, turn_num, scorecard):
-    most_common = max(set(dice), key=dice.count)
-    kept_dice = [x for x in dice if x == most_common]
+### Possible strategies
+# 1. keep all dice: random
+# 2. keep the most common: most_common
+# 3. keeping the most common unless you have three in a row or more: check_straight
+
+def decide_dice(dice, turn_num, scorecard, strategy):
+
+    if strategy=="most_common":
+        most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
+        kept_dice = [x for x in dice if x == most_common]
+        
+    elif strategy=="check_straight":
+
+        straight_available = scorecard["small_straight"] is None or scorecard["large_straight"] is None
+
+        if not straight_available:
+            most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
+            kept_dice = [x for x in dice if x == most_common]
+        else:
+            possible_straights = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6]]
+
+            for straight in possible_straights:
+                if all(die in dice for die in straight):
+                    return straight
+                else:
+                    most_common = max(set(dice), key=dice.count)
+                    kept_dice = [x for x in dice if x == most_common]
+
+    elif strategy=="random":
+        kept_dice = dice
 
     return kept_dice
 
@@ -40,18 +67,18 @@ def decide_score(scorecard, possible_scores):
         if scorecard[score] is None:
             return score
         
-def turn(scorecard):
+def turn(scorecard, strategy="most_common"):
     dice = roll_dice(5) 
-    kept_dice = decide_dice(dice, 1, scorecard)
+    kept_dice = decide_dice(dice, 1, scorecard, strategy)
 
     dice = kept_dice + roll_dice(5 - len(kept_dice))
-    kept_dice = decide_dice(dice, 2, scorecard)
+    kept_dice = decide_dice(dice, 2, scorecard, strategy)
 
     dice = kept_dice + roll_dice(5 - len(kept_dice))
 
     return dice
 
-def game():
+def game(strategy="most_common"):
     scorecard = {
         "ones": None,
         "twos": None,
@@ -72,7 +99,7 @@ def game():
     }
 
     while None in [value for key, value in scorecard.items() if key not in ["yahtzee_bonus_1", "yahtzee_bonus_2", "yahtzee_bonus_3"]]:
-        dice = turn(scorecard)
+        dice = turn(scorecard, strategy)
         possible_scores = get_scores(dice, scorecard)
 
         score = decide_score(scorecard, possible_scores)
@@ -90,12 +117,12 @@ def game():
 
     return(total_score, scorecard)
 
-def sim_games(n):
+def sim_games(n, strategy="most_common"):
     start_time = time.time()    
     scores = []
     max_score = 0
     for i in range(n):
-        score, scorecard = game()
+        score, scorecard = game(strategy)
         scores.append(score)
         if score > max_score:
             max_score = score
@@ -108,8 +135,10 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Main Streamlit code
 n = st.number_input("Number of games to simulate", 1, 100000, 1000)
+strategy = st.selectbox("Strategy", ["random", "most_common", "check_straight"])
+
 if st.button("Start"):
-    scores, best_scorecard = sim_games(n)
+    scores, best_scorecard = sim_games(n, strategy)
     st.write("Average Score: ", sum(scores) / len(scores))
     st.write("Median Score", sorted(scores)[len(scores) // 2])
     st.write("Max Score: ", max(scores))

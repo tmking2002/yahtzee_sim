@@ -19,4 +19,4 @@ blank_scorecard = {
         "chance": None
     }
 
-print(decide_dice([2, 2, 1, 5, 5], turn_num=1, scorecard=blank_scorecard, strategy="most_common"))
+print(decide_dice([5, 5, 1, 2, 2], turn_num=1, scorecard=blank_scorecard, strategy="check_straight"))

@@ -5,7 +5,7 @@ blank_scorecard = {
         "twos": None,
         "threes": None,
         "fours": None,
-        "fives": None,
+        "fives": 5,
         "sixes": None,
         "three_of_a_kind": None,
         "four_of_a_kind": None,
@@ -20,5 +20,7 @@ blank_scorecard = {
     }
 
 yahtzee.sim_games(1, "upper_bonus", True)
-#dice = [2, 4, 5, 3, 3]
+#dice = [5, 5, 5, 3, 4]
+#print(yahtzee.decide_dice(dice, 1, blank_scorecard, "upper_bonus"))
 #print(yahtzee.get_scores(dice, blank_scorecard))
+#print(yahtzee.decide_score(scorecard = blank_scorecard, possible_scores = yahtzee.get_scores(dice, blank_scorecard), strategy = "upper_bonus"))

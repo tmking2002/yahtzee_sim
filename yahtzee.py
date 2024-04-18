@@ -14,7 +14,7 @@ def get_scores(dice, scorecard):
         "three_of_a_kind": sum(dice) if any(dice.count(die) >= 3 for die in dice) else 0,
         "four_of_a_kind": sum(dice) if any(dice.count(die) >= 4 for die in dice) else 0,
         "full_house": 25 if len(set(dice)) == 2 and (dice.count(dice[0]) in [2, 3] or dice.count(dice[1]) in [2, 3]) else 0,
-        "small_straight": 30 if [1, 2, 3, 4] == sorted(dice[:4]) or [2, 3, 4, 5] == sorted(dice[1:5]) or [3, 4, 5, 6] == sorted(dice[2:6]) else 0,
+        "small_straight": 30 if [1, 2, 3, 4] == sorted(set(dice)) or [2, 3, 4, 5] == sorted(set(dice)) or [3, 4, 5, 6] == sorted(set(dice)) else 0,
         "large_straight": 40 if [1, 2, 3, 4, 5] == sorted(dice) or [2, 3, 4, 5, 6] == sorted(dice) else 0,
         "yahtzee": 50 if len(set(dice)) == 1 else 0,
         "yahtzee_bonus_1": 100 if len(set(dice)) == 1 and scorecard['yahtzee'] == 50 else 0,
@@ -24,8 +24,9 @@ def get_scores(dice, scorecard):
     }
     return scorecard
 
-def roll_dice(num_dice):
-    return [randint(1, 6) for _ in range(num_dice)]
+def roll_dice(num_dice,):
+    dice = [randint(1, 6) for _ in range(num_dice)]
+    return dice
 
 ### Possible strategies
 # 1. keep all dice: random
@@ -35,6 +36,9 @@ def roll_dice(num_dice):
 # 5. prioritize getting upper bonus: upper_bonus
 
 def decide_dice(dice, turn_num, scorecard, strategy):
+
+    if (len(set(dice)) == 2) & (max(dice.count(die) for die in dice) == 3) & (turn_num != 1):
+        return dice
 
     if strategy=="most_common":
         most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
@@ -58,7 +62,7 @@ def decide_dice(dice, turn_num, scorecard, strategy):
         most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
         kept_dice = [x for x in dice if x == most_common]
     
-    elif strategy in["no_ones", "upper_bonus"]:
+    elif strategy == "no_ones":
 
         straight_available = scorecard["small_straight"] is None or scorecard["large_straight"] is None
 
@@ -75,6 +79,23 @@ def decide_dice(dice, turn_num, scorecard, strategy):
         most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
         kept_dice = [x for x in dice if x == most_common]
 
+    elif strategy=="upper_bonus":
+
+        straight_available = scorecard["small_straight"] is None or scorecard["large_straight"] is None
+
+        if not straight_available:
+            most_common = max(set(dice) - {1}, key=lambda x: (dice.count(x), x), default=0)
+            kept_dice = [x for x in dice if x == most_common]
+        elif straight_available & (sum(dice) < 22):
+            possible_straights = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [1, 2, 3], [2, 3, 4], [3, 4, 5]]
+
+            for straight in possible_straights:
+                if all(die in dice for die in straight):
+                    return straight
+        
+        most_common = max(set(dice), key=lambda x: (dice.count(x), x), default=0)
+        kept_dice = [x for x in dice if x == most_common]
+
     elif strategy=="random":
         kept_dice = dice
 
@@ -83,39 +104,58 @@ def decide_dice(dice, turn_num, scorecard, strategy):
 def decide_score(scorecard, possible_scores, strategy):
     sorted_scores = sorted(possible_scores, key=possible_scores.get, reverse=True)
 
-    if strategy in ["no_ones", "upper_bonus"]:
+    num_remaining_slots = len([value for key, value in scorecard.items() if value is None])
+
+    if strategy == "no_ones":
         if possible_scores["ones"] is not None and max(possible_scores.values()) < 10:
             return "ones"
         
     elif strategy=="upper_bonus":
         weighted_scores = possible_scores.copy()
 
-        weighted_scores["twos"] *= 2
-        weighted_scores["threes"] *= 2
-        weighted_scores["fours"] *= 1.5
-        weighted_scores["fives"] *= 1.5
-        weighted_scores["sixes"] *= 1.5
+        weighted_scores["twos"] *= 1.8
+        weighted_scores["threes"] *= 1.2
+        weighted_scores["fours"] *= 1.2
+        weighted_scores["fives"] *= 1.2
+        weighted_scores["sixes"] *= 1.2
+        weighted_scores["chance"] *= .25
 
-        #if weighted_scores["sixes"] >= 
+        if num_remaining_slots > 8:
+            weighted_scores["chance"] = 0
 
-        sorted_scores = sorted(weighted_scores, key=weighted_scores.get, reverse=True)
+        if (weighted_scores["three_of_a_kind"] < 15) | (weighted_scores["four_of_a_kind"] < 15):
+            weighted_scores["three_of_a_kind"] = 0
+            weighted_scores["four_of_a_kind"] = 0
+
+        sorted_scores = sorted(possible_scores, key=weighted_scores.get, reverse=True)
 
     for score in sorted_scores:
         if scorecard[score] is None:
             return score
         
-def turn(scorecard, strategy="most_common"):
+def turn(scorecard, strategy="most_common", debug=False):
     dice = roll_dice(5) 
     kept_dice = decide_dice(dice, 1, scorecard, strategy)
+    if debug:
+        print("Dice: ", dice)
+        print("Kept Dice: ", kept_dice)
+        print("\n")
 
     dice = kept_dice + roll_dice(5 - len(kept_dice))
     kept_dice = decide_dice(dice, 2, scorecard, strategy)
+    if debug:
+        print("Dice: ", dice)
+        print("Kept Dice: ", kept_dice)
+        print("\n")
 
     dice = kept_dice + roll_dice(5 - len(kept_dice))
+    if debug: 
+        print("Dice: ", dice)
+        print("\n")
 
     return dice
 
-def game(strategy="most_common"):
+def game(strategy="most_common", debug=False):
     scorecard = {
         "ones": None,
         "twos": None,
@@ -136,10 +176,13 @@ def game(strategy="most_common"):
     }
 
     while None in [value for key, value in scorecard.items() if key not in ["yahtzee_bonus_1", "yahtzee_bonus_2", "yahtzee_bonus_3"]]:
-        dice = turn(scorecard, strategy)
+        dice = turn(scorecard, strategy, debug)
         possible_scores = get_scores(dice, scorecard)
 
         score = decide_score(scorecard, possible_scores, strategy)
+        if debug:
+            print("Score: ", score)
+            print("\n")
 
         scorecard[score] = possible_scores[score]
 
@@ -152,13 +195,13 @@ def game(strategy="most_common"):
 
     return(total_score, scorecard)
 
-def sim_games(n, strategy="most_common"):
+def sim_games(n, strategy="most_common", debug=False):
     start_time = time.time()    
     scorecards = []
     scores = []
     max_score = 0
     for i in range(n):
-        score, scorecard = game(strategy)
+        score, scorecard = game(strategy, debug)
         scores.append(score)
         if score > max_score:
             max_score = score

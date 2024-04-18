@@ -1,4 +1,4 @@
-from yahtzee import decide_dice
+import yahtzee
 
 blank_scorecard = {
         "ones": None,
@@ -19,4 +19,6 @@ blank_scorecard = {
         "chance": None
     }
 
-print(decide_dice([5, 5, 1, 2, 2], turn_num=1, scorecard=blank_scorecard, strategy="check_straight"))
+yahtzee.sim_games(1, "upper_bonus", True)
+#dice = [2, 4, 5, 3, 3]
+#print(yahtzee.get_scores(dice, blank_scorecard))

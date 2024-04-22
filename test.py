@@ -1,4 +1,6 @@
 import yahtzee
+import matplotlib.pyplot as plt
+import numpy as np
 
 blank_scorecard = {
         "ones": None,
@@ -19,8 +21,8 @@ blank_scorecard = {
         "chance": None
     }
 
-yahtzee.sim_games(1, "upper_bonus", True)
-#dice = [5, 5, 5, 3, 4]
+#yahtzee.sim_games(1, "upper_bonus", True)
+#dice = [5, 5, 5, 3, 3]
 #print(yahtzee.decide_dice(dice, 1, blank_scorecard, "upper_bonus"))
 #print(yahtzee.get_scores(dice, blank_scorecard))
 #print(yahtzee.decide_score(scorecard = blank_scorecard, possible_scores = yahtzee.get_scores(dice, blank_scorecard), strategy = "upper_bonus"))

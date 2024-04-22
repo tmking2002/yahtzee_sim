@@ -1,4 +1,6 @@
-![Yahtzee Logo](logo.png)
+<p align="center">
+  <img src="logo.png" alt="Yahtzee Logo" width="100">
+</p>
 
 # Yahtzee Simulator
 

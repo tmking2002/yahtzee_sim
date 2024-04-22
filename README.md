@@ -1,6 +1,4 @@
-# yahtzee_sim
- 
-# Yahtzee Game
+# Yahtzee Simulator
 
 This repository contains a Python implementation of the classic Yahtzee game, along with a Streamlit web application for playing the game interactively. Additionally, there's a script for testing various components of the game.
 

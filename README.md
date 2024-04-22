@@ -1,8 +1,7 @@
-<p align="center">
-  <img src="logo.png" alt="Yahtzee Logo" width="100">
-</p>
-
 # Yahtzee Simulator
+
+<img src="logo.png" alt="Yahtzee Logo" width="100">
+
 
 This repository contains a Python implementation of the classic Yahtzee game, along with a Streamlit web application for playing the game interactively. Additionally, there's a script for testing various components of the game.
 

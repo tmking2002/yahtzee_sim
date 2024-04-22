@@ -19,7 +19,7 @@ To play the Yahtzee game interactively, follow these steps:
 
 ## Final Report
 
-For a detailed analysis of the game and its components, please refer to the [final report](report.pdf) located in this repository.
+For a detailed analysis of the game and its components, please refer to the [final report](final_report.pdf) located in this repository.
 
 ## Contributors
 
